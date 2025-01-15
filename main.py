@@ -31,7 +31,7 @@ def start_timer():
 def end_timer(text=""):
     global initial_timestamp 
     execution_time = time.time() - initial_timestamp
-    print(f"{execution_time:.3f}s {text}")
+    print(f"{execution_time:.2f}s {text}")
 
 def get_size(path, get_in_Bytes=False):
     """
@@ -66,14 +66,15 @@ def get_size(path, get_in_Bytes=False):
 
 src_path = 'C:/Users/Liju/Desktop/Folder Sync/des3'
 dest_path = 'C:/Users/Liju/Desktop/Folder Sync/des'
+files_copied, files_deleted = [0] * 2
 
 start_timer()
 src_files = get_files_recursively(src_path)
-end_timer("To read source files")
+end_timer(f"To read {format(len(src_files), ',')} source items")
 
 start_timer()
 dest_files = get_files_recursively(dest_path)
-end_timer("To read destination files")
+end_timer(f"To read {format(len(dest_files), ',')} destination items")
 
 while 0 < len(src_files):
     file = src_files[0]
@@ -89,6 +90,7 @@ while 0 < len(src_files):
             shutil.copytree(src_file, dest_file)
             src_files = [other_file for other_file in src_files if not other_file.startswith(file + '/')]
         src_files.pop(0)
+        files_copied += 1
     else:
         dest_files.remove(file)
         src_files.pop(0)
@@ -103,8 +105,10 @@ while 0 < len(src_files):
                 shutil.copy(src_file, dest_file)
             if os.path.isdir(src_file):
                 shutil.copytree(src_file, dest_file)
+            files_copied += 1
     end_timer(f"To copy \t- {get_size(src_file)} \t-  {len(src_files)} Files Remaining \t- /{file}")
 
+files_deleted = len(dest_files)
 while 0 < len(dest_files):
     dest_file = dest_path + '/' + dest_files[0]
     os.chmod(dest_file, 0o666)
@@ -119,7 +123,12 @@ while 0 < len(dest_files):
     end_timer(f"To delete \t- {file_size} \t- {len(dest_files)} Files Remaining \t- /{dest_files[0]}")
     dest_files.remove(dest_files[0])
 
-print("Done")
+print(f"\n\033[92m{format(files_copied, ',')}\033[0m Items copied\n\033[91m{format(files_deleted, ',')}\033[0m Items deleted From Destination\n Done")
+
+if get_size(src_path, get_in_Bytes=True) != get_size(dest_path, get_in_Bytes=True):
+    print("\n\033[91m Something went wrong\033[0m")
+else:
+    print("\n All files are in sync")
 
 
 # file_paths = glob.glob(src_path + '/**/*', recursive=True)
