@@ -18,7 +18,7 @@ import filecmp, shutil, time
 # root.mainloop()
 
 def get_files_recursively(path):
-    files = glob.glob(path + '/**/*', recursive=True)
+    files = glob.glob(path + '/**/*', recursive=True, include_hidden=True)
     files = [os.path.relpath(file, start=path).replace('\\', '/') for file in files]
     return files
 
@@ -33,9 +33,29 @@ def end_timer(text=""):
     execution_time = time.time() - initial_timestamp
     print(f"{execution_time:.3f}s {text}")
 
-def get_size(path):
+def get_size(path, get_in_Bytes=False):
+    """
+    Get the total size of all files in given path.
+
+    Args:
+        path (str): Path to the directory to get the size of.
+        get_in_Bytes (bool, optional): If True, return size in bytes, else return in human readable format. Defaults to False.
+
+    Returns:
+        str: The size of the given path in bytes or human readable format.
+    """
     try:
-        size = os.path.getsize(path)
+        size = 0
+        for dirpath, dirnames, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                # skip if it is symbolic link
+                if not os.path.islink(fp):
+                    size += os.path.getsize(fp)
+
+        if get_in_Bytes:
+            return f"{size} Bytes"
+
         for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
             if size < 1024.0:
                 return f"{size:.2f} {unit}B"
