@@ -46,12 +46,15 @@ def get_size(path, get_in_Bytes=False):
     """
     try:
         size = 0
-        for dirpath, dirnames, filenames in os.walk(path):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
-                # skip if it is symbolic link
-                if not os.path.islink(fp):
-                    size += os.path.getsize(fp)
+        if os.path.isfile(path):
+            size = os.path.getsize(path)
+        elif os.path.isdir(path):
+            for dirpath, dirnames, filenames in os.walk(path):
+                for f in filenames:
+                    fp = os.path.join(dirpath, f)
+                    # skip if it is symbolic link
+                    if not os.path.islink(fp):
+                        size += os.path.getsize(fp)
 
         if get_in_Bytes:
             return f"{size} Bytes"
@@ -92,8 +95,8 @@ while 0 < len(src_files):
         src_files.pop(0)
         files_copied += 1
     else:
-        dest_files.remove(file)
         src_files.pop(0)
+        dest_files.remove(file)
 
         if os.path.isdir(src_file):
             continue
@@ -108,10 +111,11 @@ while 0 < len(src_files):
             files_copied += 1
     end_timer(f"To copy \t- {get_size(src_file)} \t-  {len(src_files)} Files Remaining \t- /{file}")
 
+# Delete files from destination that are not in source
 files_deleted = len(dest_files)
 while 0 < len(dest_files):
     dest_file = dest_path + '/' + dest_files[0]
-    os.chmod(dest_file, 0o666)
+    os.chmod(dest_file, 0o666)  # Change permission to delete
     file_size = get_size(dest_file)
     
     start_timer()
@@ -125,22 +129,9 @@ while 0 < len(dest_files):
 
 print(f"\n\033[92m{format(files_copied, ',')}\033[0m Items copied\n\033[91m{format(files_deleted, ',')}\033[0m Items deleted From Destination\n Done")
 
+# Check if the size of source and destination are same
 if get_size(src_path, get_in_Bytes=True) != get_size(dest_path, get_in_Bytes=True):
     print("\n\033[91m Something went wrong\033[0m")
 else:
     print("\n All files are in sync")
 
-
-# file_paths = glob.glob(src_path + '/**/*', recursive=True)
-
-
-# print(filecmp.DEFAULT_IGNORES)
-# def print_diff_files(dcmp):
-#     for name in dcmp.diff_files:
-#         print("diff_file %s found in %s and %s" % (name, dcmp.left,
-#               dcmp.right))
-#     for sub_dcmp in dcmp.subdirs.values():
-#         print_diff_files(sub_dcmp)
-
-# dcmp = filecmp.dircmp('src', 'des')
-# dcmp.report_full_closure()
